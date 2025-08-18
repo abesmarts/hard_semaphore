@@ -1,0 +1,6 @@
+{
+  "title": "VM State Monitor",
+  "panelsJSON": "[{\"type\":\"metric\",\"id\":\"cpu-usage\"},{\"type\":\"metric\",\"id\":\"memory-usage\"}]",
+  "uiStateJSON": "{}",
+  "version": 1
+}

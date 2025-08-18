@@ -1,0 +1,25 @@
+[
+  {
+    "name": "Provision VM with OpenTofu",
+    "inventory": "localhost",
+    "playbook": "",
+    "repository_id": 1,
+    "type": "terraform",
+    "command": "cd opentofu && tofu init && tofu apply -auto-approve && ./generate_inventory.sh"
+  },
+  {
+    "name": "Configure VM with Ansible",
+    "inventory": "ansible/inventory.ini",
+    "playbook": "ansible/playbook-system-monitor.yml",
+    "repository_id": 1,
+    "type": "ansible"
+  },
+  {
+    "name": "Deploy ELK Configs",
+    "inventory": "localhost",
+    "playbook": "",
+    "repository_id": 1,
+    "type": "shell",
+    "command": "sudo cp elk/filebeat.yml /etc/filebeat/filebeat.yml && sudo cp elk/logstash/pipeline-all.conf /etc/logstash/conf.d/ && sudo systemctl restart filebeat logstash"
+  }
+]
