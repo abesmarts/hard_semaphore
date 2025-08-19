@@ -1,0 +1,47 @@
+filebeat.inputs:
+
+  - type: log
+    paths:
+      - /var/log/vm_state/*.json
+    fields:
+      log_type: vm_state
+      vm_name: ${HOSTNAME}
+    json.keys_under_root: true
+    json.add_error_key: true
+
+
+  - type: log
+    paths:
+      - /var/log/bot_data/*.json
+    fields:
+      log_type: bot_data
+      vm_name: ${HOSTNAME}
+    json.keys_under_root: true
+    json.add_error_key: true
+
+  - type: log
+    paths:
+      - /var/log/ansible/*.log
+    fields:
+      log_type: ansible
+      vm_name: ${HOSTNAME}
+
+
+  - type: log
+    paths:
+      - /var/log/opentofu/*.log
+    fields:
+      log_type: opentofu
+      vm_name: ${HOSTNAME}
+
+
+  - type: log
+    paths:
+      - /var/log/syslog
+      - /var/log/auth.log
+    fields:
+      log_type: system
+      vm_name: ${HOSTNAME}
+
+output.logstash:
+  hosts: ["{HOST_LOCATION}:5044"]

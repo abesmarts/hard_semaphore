@@ -1,0 +1,31 @@
+# Git metadata
+.git
+.gitignore
+
+# Build/CI artifacts
+*.log
+*.tmp
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Ansible/Terraform state
+ansible/*.retry
+.tofu/
+*.tfstate
+*.tfstate.*
+
+# Local secrets & env
+.env
+semaphore.sqlite*
+*.pem
+*.key
+*.crt
+*.csr
+
+# Docs & misc
+README.md
+*.md
+*.bak

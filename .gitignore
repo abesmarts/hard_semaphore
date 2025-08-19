@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+env/
+venv/
+
+# Ansible
+*.retry
+*.log
+inventory/*
+!hosts.ini
+
+# Terraform / OpenTofu
+.tofu/
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Certificates / Secrets
+docker/certs/*
+!docker/certs/.gitkeep
+*.pem
+*.key
+*.crt
+*.csr
+
+# Semaphore local configs
+semaphore.sqlite*
+semaphore.db
+.semaphore/
+.env
+
+# OS / Editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+*.bak

@@ -1,6 +1,0 @@
-project_id       = "dummy-project-id"
-region           = "us-central1"
-zone             = "us-central1-a"
-machine_type     = "e2-standard-4"
-ssh_public_key   = "~/.ssh/gcp_vm_key.pub"
-credentials_file = "~/.gcp/service-account.json"

@@ -1,0 +1,110 @@
+version: "3.9"
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION}
+    container_name: es
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+      - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    ports:
+      - "${ELASTICSEARCH_PORT}:9200"
+    healthcheck:
+      test: ["CMD", "curl", "-s", "-k", "-u", "elastic:${ELASTIC_PASSWORD}", "https://localhost:9200"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${ELASTIC_VERSION}
+    container_name: kib
+    depends_on:
+      - elasticsearch
+    environment:
+      - ELASTICSEARCH_HOSTS=https://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
+      - SERVER_PUBLICBASEURL=http://localhost:${KIBANA_PORT}
+      - XPACK_SECURITY_ENCRYPTIONKEY=$(openssl rand -hex 32 | tr -d '\n')
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=$(openssl rand -hex 32 | tr -d '\n')
+      - XPACK_REPORTING_ENCRYPTIONKEY=$(openssl rand -hex 32 | tr -d '\n')
+      - SERVER_SSL_ENABLED=false
+    ports:
+      - "${KIBANA_PORT}:5601"
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:${ELASTIC_VERSION}
+    container_name: ls
+    depends_on:
+      - elasticsearch
+    volumes:
+      # - ./logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro
+      - ./logstash/pipeline/:/usr/share/logstash/pipeline/:ro
+      - ./certs:/certs:ro
+    environment:
+      - LS_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.monitoring.enabled=false
+      - LOG_LEVEL=info
+    ports:
+      - "${LOGSTASH_BEATS_PORT}:5044"   # Beats/TLS
+      - "${LOGSTASH_HTTP_PORT}:5045"    # HTTP/TLS for VM JSON
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:${ELASTIC_VERSION}
+    container_name: fb
+    user: root
+    depends_on:
+      - logstash
+    volumes:
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./certs:/certs:ro
+      - filebeat-data:/usr/share/filebeat/data
+    command: ["filebeat", "-e"]
+
+  semaphore-db:
+    image: postgres:16
+    environment:
+      - POSTGRES_DB=semaphore
+      - POSTGRES_USER=semaphore
+      - POSTGRES_PASSWORD=${SEMAPHORE_DB_PASS}
+    volumes:
+      - semaphore-db:/var/lib/postgresql/data
+
+  semaphore:
+    image: semaphoreui/semaphore:${SEMAPHORE_VERSION}
+    depends_on:
+      - semaphore-db
+    environment:
+      - SEMAPHORE_DB_USER=semaphore
+      - SEMAPHORE_DB_PASS=${SEMAPHORE_DB_PASS}
+      - SEMAPHORE_DB_HOST=semaphore-db
+      - SEMAPHORE_DB_PORT=5432
+      - SEMAPHORE_DB_DIALECT=postgres
+      - SEMAPHORE_PLAYBOOK_PATH=/tmp/semaphore
+      - SEMAPHORE_ADMIN_PASSWORD=${SEMAPHORE_ADMIN_PASSWORD}
+      - SEMAPHORE_ADMIN_NAME=${SEMAPHORE_ADMIN_NAME}
+      - SEMAPHORE_ADMIN_EMAIL=${SEMAPHORE_ADMIN_EMAIL}
+      - SEMAPHORE_ADMIN_USERNAME=${SEMAPHORE_ADMIN_USERNAME}
+      - SEMAPHORE_ACCESS_KEY_ENCRYPTION=$(openssl rand -hex 32 | tr -d '\n')
+    volumes:
+      - /home/ubuntu/python-scripts:/home/python-scripts:ro
+      - ../semaphore:/etc/semaphore
+      - ../ansible:/tmp/semaphore:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "${SEMAPHORE_PORT}:3000"
+
+volumes:
+  esdata:
+  filebeat-data:
+  semaphore-db:

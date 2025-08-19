@@ -1,0 +1,28 @@
+{
+  "rule": {
+    "title": "High CPU on VM (vm_state_monitor)",
+    "index": "vm_state_monitor-*",
+    "condition": {
+      "type": "threshold",
+      "params": {
+        "aggType": "avg",
+        "aggField": "cpu_percent",
+        "timeWindowSize": 5,
+        "timeWindowUnit": "m",
+        "thresholdComparator": ">",
+        "threshold": [90]
+      }
+    },
+    "actions": [
+      {
+        "name": "email_admin",
+        "type": "email",
+        "params": {
+          "to": ["ops@example.com"],
+          "subject": "ALERT: High CPU on {{context.host}}",
+          "body": "Average CPU is above threshold"
+        }
+      }
+    ]
+  }
+}
