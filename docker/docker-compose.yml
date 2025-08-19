@@ -102,7 +102,7 @@ services:
       - ../ansible:/tmp/semaphore:rw
       - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
-      - "${SEMAPHORE_PORT}:3000"
+      - "3000:3000"
 
 volumes:
   esdata:
