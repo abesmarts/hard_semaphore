@@ -1,12 +1,12 @@
 version: "3.9"
 services:
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION}
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.1.1
     container_name: es
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=true
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - ELASTIC_PASSWORD=changeme-please
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
     ulimits:
       memlock:
@@ -16,32 +16,32 @@ services:
       - esdata:/usr/share/elasticsearch/data
       - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
     ports:
-      - "${ELASTICSEARCH_PORT}:9200"
+      - "9200:9200"
     healthcheck:
-      test: ["CMD", "curl", "-s", "-k", "-u", "elastic:${ELASTIC_PASSWORD}", "https://localhost:9200"]
+      test: ["CMD", "curl", "-s", "-k", "-u", "elastic:changeme-please", "https://localhost:9200"]
       interval: 20s
       timeout: 10s
       retries: 10
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:${ELASTIC_VERSION}
+    image: docker.elastic.co/kibana/kibana:9.1.1
     container_name: kib
     depends_on:
       - elasticsearch
     environment:
       - ELASTICSEARCH_HOSTS=https://elasticsearch:9200
       - ELASTICSEARCH_USERNAME=elastic
-      - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
-      - SERVER_PUBLICBASEURL=http://localhost:${KIBANA_PORT}
+      - ELASTICSEARCH_PASSWORD=changeme-please
+      - SERVER_PUBLICBASEURL=http://localhost:5601
       - XPACK_SECURITY_ENCRYPTIONKEY=$(openssl rand -hex 32 | tr -d '\n')
       - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=$(openssl rand -hex 32 | tr -d '\n')
       - XPACK_REPORTING_ENCRYPTIONKEY=$(openssl rand -hex 32 | tr -d '\n')
       - SERVER_SSL_ENABLED=false
     ports:
-      - "${KIBANA_PORT}:5601"
+      - "5601:5601"
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:${ELASTIC_VERSION}
+    image: docker.elastic.co/logstash/logstash:9.1.1
     container_name: ls
     depends_on:
       - elasticsearch
@@ -54,11 +54,11 @@ services:
       - xpack.monitoring.enabled=false
       - LOG_LEVEL=info
     ports:
-      - "${LOGSTASH_BEATS_PORT}:5044"   # Beats/TLS
-      - "${LOGSTASH_HTTP_PORT}:5045"    # HTTP/TLS for VM JSON
+      - "5044:5044"   # Beats/TLS
+      - "5045:5045"    # HTTP/TLS for VM JSON
 
   filebeat:
-    image: docker.elastic.co/beats/filebeat:${ELASTIC_VERSION}
+    image: docker.elastic.co/beats/filebeat:9.1.1
     container_name: fb
     user: root
     depends_on:
@@ -76,25 +76,25 @@ services:
     environment:
       - POSTGRES_DB=semaphore
       - POSTGRES_USER=semaphore
-      - POSTGRES_PASSWORD=${SEMAPHORE_DB_PASS}
+      - POSTGRES_PASSWORD=semaphore_db_pw
     volumes:
       - semaphore-db:/var/lib/postgresql/data
 
   semaphore:
-    image: semaphoreui/semaphore:${SEMAPHORE_VERSION}
+    image: semaphoreui/semaphore:v2.15.5
     depends_on:
       - semaphore-db
     environment:
       - SEMAPHORE_DB_USER=semaphore
-      - SEMAPHORE_DB_PASS=${SEMAPHORE_DB_PASS}
+      - SEMAPHORE_DB_PASS=semaphore_db_pw
       - SEMAPHORE_DB_HOST=semaphore-db
       - SEMAPHORE_DB_PORT=5432
       - SEMAPHORE_DB_DIALECT=postgres
       - SEMAPHORE_PLAYBOOK_PATH=/tmp/semaphore
-      - SEMAPHORE_ADMIN_PASSWORD=${SEMAPHORE_ADMIN_PASSWORD}
-      - SEMAPHORE_ADMIN_NAME=${SEMAPHORE_ADMIN_NAME}
-      - SEMAPHORE_ADMIN_EMAIL=${SEMAPHORE_ADMIN_EMAIL}
-      - SEMAPHORE_ADMIN_USERNAME=${SEMAPHORE_ADMIN_USERNAME}
+      - SEMAPHORE_ADMIN_PASSWORD=Admin123!
+      - SEMAPHORE_ADMIN_NAME=admin
+      - SEMAPHORE_ADMIN_EMAIL=admin@localhost
+      - SEMAPHORE_ADMIN_USERNAME=admin
       - SEMAPHORE_ACCESS_KEY_ENCRYPTION=$(openssl rand -hex 32 | tr -d '\n')
     volumes:
       - /home/ubuntu/python-scripts:/home/python-scripts:ro
